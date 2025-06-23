@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OkapiChat - Hors ligne</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #007FFF 0%, #CE1126 50%, #FFD700 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .offline-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        p {
+            font-size: 16px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .retry-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .retry-btn:hover {
+            background: white;
+            color: #007FFF;
+        }
+
+        .network-status {
+            margin-top: 20px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .offline-features {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .offline-features h3 {
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .offline-features ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .offline-features li {
+            padding: 5px 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .offline-features li::before {
+            content: "✓ ";
+            color: #FFD700;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="logo">🦌🇨🇩</div>
+        <h1>OkapiChat</h1>
+        <p>Vous êtes actuellement hors ligne. Vérifiez votre connexion internet et réessayez.</p>
+        
+        <a href="/" class="retry-btn" onclick="window.location.reload()">
+            🔄 Réessayer
+        </a>
+        
+        <div class="network-status">
+            <span id="network-indicator" class="pulse">⚠️ Connexion en cours...</span>
+        </div>
+        
+        <div class="offline-features">
+            <h3>Fonctionnalités disponibles hors ligne :</h3>
+            <ul>
+                <li>Consultation des messages mis en cache</li>
+                <li>Rédaction de posts (envoi différé)</li>
+                <li>Paramètres de l'application</li>
+                <li>Informations de profil</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Vérifier la connexion périodiquement
+        function checkConnection() {
+            const indicator = document.getElementById('network-indicator');
+            
+            if (navigator.onLine) {
+                indicator.innerHTML = '🌐 Connexion rétablie !';
+                indicator.className = '';
+                indicator.style.color = '#4CAF50';
+                
+                // Rediriger automatiquement après 2 secondes
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            } else {
+                indicator.innerHTML = '⚠️ Toujours hors ligne...';
+                indicator.className = 'pulse';
+            }
+        }
+
+        // Vérifier la connexion toutes les 3 secondes
+        setInterval(checkConnection, 3000);
+
+        // Écouter les événements de connexion
+        window.addEventListener('online', () => {
+            console.log('🌐 Connexion rétablie');
+            checkConnection();
+        });
+
+        window.addEventListener('offline', () => {
+            console.log('⚠️ Connexion perdue');
+            checkConnection();
+        });
+
+        // Vérification initiale
+        checkConnection();
+
+        // Service Worker: Écouter les messages
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'BACKGROUND_SYNC_COMPLETE') {
+                    console.log('🔄 Synchronisation terminée');
+                    // Optionnel: afficher un message à l'utilisateur
+                }
+            });
+        }
+    </script>
+</body>
+</html>

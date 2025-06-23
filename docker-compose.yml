@@ -1,0 +1,135 @@
+# Docker Compose pour développement local OkapiChat Backend
+version: '3.8'
+
+services:
+  # Service principal API
+  api:
+    build: .
+    container_name: okapichat-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://okapichat:password@postgres:5432/okapichat
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - .:/app
+      - uploads_data:/app/uploads
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - okapichat-network
+    restart: unless-stopped
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Base de données PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: okapichat-postgres
+    environment:
+      POSTGRES_DB: okapichat
+      POSTGRES_USER: okapichat
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - okapichat-network
+    restart: unless-stopped
+
+  # Cache Redis
+  redis:
+    image: redis:7-alpine
+    container_name: okapichat-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - okapichat-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # Interface admin PostgreSQL (optionnel)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: okapichat-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@okapichat.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - okapichat-network
+    restart: unless-stopped
+
+  # Interface Redis (optionnel)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: okapichat-redis-ui
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - okapichat-network
+    restart: unless-stopped
+
+  # Service de monitoring (optionnel)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: okapichat-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - okapichat-network
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+
+  # Dashboard monitoring
+  grafana:
+    image: grafana/grafana:latest
+    container_name: okapichat-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - okapichat-network
+    restart: unless-stopped
+
+# Volumes persistants
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  uploads_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# Réseau isolé
+networks:
+  okapichat-network:
+    driver: bridge

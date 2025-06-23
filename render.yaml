@@ -1,8 +1,165 @@
+# Configuration Render pour OkapiChat Backend
+# Déploiement automatique depuis GitHub
+
 services:
+  # Service principal API Backend
   - type: web
     name: okapichat-backend
-    env: docker
-    plan: free
+    runtime: docker
+    plan: starter  # Gratuit pour commencer, upgrader vers standard si nécessaire
+    
+    # Configuration repository GitHub
+    repo: https://github.com/votre-username/okapichat-backend.git  # À remplacer
+    branch: main
     dockerfilePath: ./Dockerfile
+    
+    # Configuration réseau
+    healthCheckPath: /health
+    
+    # Variables d'environnement
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      
+      - key: JWT_SECRET
+        generateValue: true  # Render génère automatiquement
+      
+      - key: SUPABASE_URL
+        value: https://xzjqpdnkxiizskqnckox.supabase.co
+      
+      - key: SUPABASE_ANON_KEY
+        sync: false  # À définir manuellement dans Render Dashboard
+      
+      - key: CORS_ORIGINS
+        value: "https://okapichat-rdc.netlify.app,https://*.netlify.app"
+      
+      - key: LOG_LEVEL
+        value: info
+      
+      - key: MAX_UPLOAD_SIZE
+        value: "5242880"  # 5MB en bytes
+    
+    # Configuration auto-deploy
     autoDeploy: true
-    healthCheckPath: /ping
+    
+    # Domaine personnalisé (optionnel)
+    # domains:
+    #   - api.okapichat.com
+
+  # Service Redis pour cache (optionnel)
+  - type: redis
+    name: okapichat-redis
+    plan: starter  # Gratuit
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []  # Accessible seulement par les services Render
+    
+  # Service PostgreSQL pour données (si pas Supabase)
+  # - type: pserv
+  #   name: okapichat-postgres
+  #   plan: starter
+  #   databaseName: okapichat
+  #   databaseUser: okapichat_user
+
+# Configuration build
+buildCommand: |
+  # Installation des dépendances système si nécessaire
+  echo "🦌 Building OkapiChat Backend..."
+  
+  # Validation des variables d'environnement
+  if [ -z "$SUPABASE_URL" ]; then
+    echo "❌ SUPABASE_URL is required"
+    exit 1
+  fi
+  
+  echo "✅ Build completed successfully"
+
+# Configuration déploiement
+deploy:
+  # Pre-deploy hooks
+  preDeployCommand: |
+    echo "🚀 Pre-deploying OkapiChat Backend..."
+    
+    # Vérifications de santé
+    python -c "import sys; print(f'Python version: {sys.version}')"
+    pip list | grep fastapi
+    
+    echo "✅ Pre-deploy checks passed"
+  
+  # Post-deploy hooks
+  postDeployCommand: |
+    echo "🎉 OkapiChat Backend deployed successfully!"
+    
+    # Test de santé de l'API
+    sleep 10
+    curl -f $RENDER_EXTERNAL_URL/health || echo "⚠️ Health check failed"
+    
+    echo "🦌🇨🇩 OkapiChat Backend est en ligne!"
+
+# Configuration monitoring
+healthCheck:
+  path: /health
+  intervalSeconds: 30
+  timeoutSeconds: 10
+  unhealthyThresholdCount: 3
+  healthyThresholdCount: 2
+
+# Configuration auto-scaling (plans payants)
+scaling:
+  minInstances: 1
+  maxInstances: 3
+  targetCPUPercent: 70
+  targetMemoryPercent: 80
+
+# Configuration backup (si base de données)
+# backup:
+#   enabled: true
+#   schedule: "0 2 * * *"  # 2h du matin tous les jours
+#   retentionDays: 7
+
+# Notifications de déploiement
+notifications:
+  slack:
+    enabled: false
+    # webhookURL: "https://hooks.slack.com/services/..."
+  
+  email:
+    enabled: true
+    # emails:
+    #   - admin@okapichat.com
+
+# Métriques et logging
+logging:
+  level: info
+  format: json
+  
+metrics:
+  enabled: true
+  path: /metrics
+
+# Sécurité
+security:
+  # Headers de sécurité
+  headers:
+    contentTypeOptions: nosniff
+    frameOptions: deny
+    xssProtection: "1; mode=block"
+    referrerPolicy: strict-origin-when-cross-origin
+  
+  # Rate limiting
+  rateLimit:
+    enabled: true
+    requests: 1000
+    window: 3600  # 1 heure
+
+# Configuration régionale
+region: oregon  # Plus proche de l'Europe/Afrique que US East
+
+# Tags pour organisation
+tags:
+  - okapichat
+  - rdc
+  - congo
+  - social-network
+  - fastapi
+  - python
+  - africa

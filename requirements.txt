@@ -1,2 +1,93 @@
-fastapi
-uvicorn
+# OkapiChat Backend Dependencies
+# Python FastAPI backend pour l'application OkapiChat RDC
+
+# Framework web principal
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Gestion des requêtes et validation
+pydantic==2.5.0
+pydantic[email]==2.5.0
+
+# Base de données et ORM
+sqlalchemy==2.0.23
+asyncpg==0.29.0
+alembic==1.13.0
+
+# Authentification et sécurité
+pyjwt==2.8.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# Gestion des fichiers
+aiofiles==23.2.1
+pillow==10.1.0
+
+# Clients API externes
+httpx==0.25.2
+aiohttp==3.9.1
+
+# Supabase integration (optionnel)
+supabase==2.0.1
+postgrest==0.13.0
+
+# Cache et performance
+redis==5.0.1
+aioredis==2.0.1
+
+# Monitoring et logging
+structlog==23.2.0
+sentry-sdk[fastapi]==1.38.0
+
+# Utilitaires de développement
+python-dotenv==1.0.0
+typing-extensions==4.8.0
+
+# Tests (développement)
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+
+# Formatage et linting (développement)
+black==23.11.0
+flake8==6.1.0
+isort==5.12.0
+
+# Documentation
+mkdocs==1.5.3
+mkdocs-material==9.4.8
+
+# Déploiement et production
+gunicorn==21.2.0
+prometheus-client==0.19.0
+
+# Traitement d'images et médias
+opencv-python-headless==4.8.1.78
+imageio==2.33.0
+
+# Internationalisation
+babel==2.13.1
+
+# Gestion des emails (pour notifications)
+fastapi-mail==1.4.1
+
+# WebSocket pour temps réel
+websockets==12.0
+
+# Configuration spécifique RDC
+geopy==2.4.0        # Pour géolocalisation provinces RDC
+pytz==2023.3        # Timezone Kinshasa
+pycountry==23.12.7  # Données pays/langues
+
+# Sécurité additionnelle
+cryptography==41.0.7
+bcrypt==4.1.2
+
+# Optimisation
+ujson==5.8.0       # JSON plus rapide
+orjson==3.9.10     # Alternative JSON
+
+# Production monitoring
+psutil==5.9.6      # Monitoring système
+asyncio-mqtt==0.16.1  # MQTT pour IoT/notifications
